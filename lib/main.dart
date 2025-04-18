@@ -69,6 +69,7 @@ class _TodoHomeState extends State<TodoHome> {
   final List<Todo> _todos = [];
   final _controller = TextEditingController();
   Priority _selectedPriority = Priority.medium;
+  bool _isAscending = true;
 
   @override
   void initState() {
@@ -83,6 +84,7 @@ class _TodoHomeState extends State<TodoHome> {
       final List<dynamic> decoded = jsonDecode(stored);
       setState(() {
         _todos.addAll(decoded.map((e) => Todo.fromMap(e)));
+        _sortTodos();
       });
     }
   }
@@ -125,6 +127,7 @@ class _TodoHomeState extends State<TodoHome> {
                 final todo = Todo(text: text, priority: _selectedPriority);
                 setState(() {
                   _todos.add(todo);
+                  _sortTodos();
                 });
                 _saveTodos();
                 _controller.clear();
@@ -160,6 +163,18 @@ class _TodoHomeState extends State<TodoHome> {
     _saveTodos();
   }
 
+  void _sortTodos() {
+    setState(() {
+      _todos.sort((a, b) {
+        if (_isAscending) {
+          return a.priority.index.compareTo(b.priority.index);
+        } else {
+          return b.priority.index.compareTo(a.priority.index);
+        }
+      });
+    });
+  }
+
   IconData _getIcon(Priority priority) {
     switch (priority) {
       case Priority.high:
@@ -190,6 +205,20 @@ class _TodoHomeState extends State<TodoHome> {
       appBar: AppBar(
         title: const Text('Your Tasks'),
         actions: [
+          IconButton(
+            onPressed: () {
+              setState(() {
+                _isAscending = !_isAscending;
+                _sortTodos();
+              });
+            },
+            icon: Icon(
+              _isAscending ? Icons.arrow_upward : Icons.arrow_downward,
+            ),
+            tooltip: _isAscending
+                ? 'Sort: Low to High Priority'
+                : 'Sort: High to Low Priority',
+          ),
           if (_hasCompletedTasks)
             IconButton(
               onPressed: _deleteCompletedTasks,
